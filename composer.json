@@ -1,0 +1,19 @@
+{
+    "name": "simklee/laravel-crafting-table",
+    "description": "Laravel Package to craft extended models",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Simklee\\LaravelCraftingTable\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Simon Kleeschulte",
+            "email": "simon.kleeschulte@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
