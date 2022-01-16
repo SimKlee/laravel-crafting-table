@@ -1,11 +1,17 @@
 {
     "name": "simklee/laravel-crafting-table",
-    "description": "Laravel Package to craft extended models",
+    "description": "Laravel Package to craft extended models.",
     "type": "library",
     "license": "MIT",
     "autoload": {
         "psr-4": {
             "SimKlee\\LaravelCraftingTable\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SimKlee\\LaravelCraftingTable\\Tests\\": "tests",
+            "SimKlee\\LaravelCraftingTable\\Tests\\Unit\\": "tests/Unit"
         }
     },
     "authors": [
@@ -28,5 +34,9 @@
                 "SimKlee\\LaravelCraftingTable\\LaravelCraftingTableServiceProvider"
             ]
         }
+    },
+    "scripts": {
+        "codestyle-check": "./vendor/bin/phpcs src/ tests/",
+        "codestyle-fix": "./vendor/bin/phpcbf src/ tests/"
     }
 }

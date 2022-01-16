@@ -812,12 +812,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "dc68fb490d6557d33414ce22a5a38ad0ee3e5bda"
+                "reference": "5ce33c0c2d3f6080c6abe610660db48c5899112f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/dc68fb490d6557d33414ce22a5a38ad0ee3e5bda",
-                "reference": "dc68fb490d6557d33414ce22a5a38ad0ee3e5bda",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/5ce33c0c2d3f6080c6abe610660db48c5899112f",
+                "reference": "5ce33c0c2d3f6080c6abe610660db48c5899112f",
                 "shasum": ""
             },
             "require": {
@@ -978,7 +978,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2022-01-14T21:03:52+00:00"
+            "time": "2022-01-15T17:24:59+00:00"
         },
         {
             "name": "laravel/serializable-closure",
@@ -2866,12 +2866,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "a814b03ec490d5a3d61558bed2714e9b02a97c63"
+                "reference": "b090825add7cc0722626702e92d1532b7fdec52e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/a814b03ec490d5a3d61558bed2714e9b02a97c63",
-                "reference": "a814b03ec490d5a3d61558bed2714e9b02a97c63",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/b090825add7cc0722626702e92d1532b7fdec52e",
+                "reference": "b090825add7cc0722626702e92d1532b7fdec52e",
                 "shasum": ""
             },
             "require": {
@@ -2961,7 +2961,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-01-14T08:33:54+00:00"
+            "time": "2022-01-15T09:04:10+00:00"
         },
         {
             "name": "pimple/pimple",
