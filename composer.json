@@ -22,11 +22,16 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "php": "^8.0"
+        "php": "^8.0",
+        "squizlabs/php_codesniffer": "4.0.x-dev"
     },
     "require-dev": {
         "orchestra/testbench": "^6.0",
-        "squizlabs/php_codesniffer": "4.0.x-dev"
+        "phpstan/phpstan": "1.4.x-dev"
+    },
+    "scripts": {
+        "codestyle-check": "./vendor/bin/phpcs src/ tests/",
+        "codestyle-fix": "./vendor/bin/phpcbf src/ tests/"
     },
     "extra": {
         "laravel": {
@@ -34,9 +39,5 @@
                 "SimKlee\\LaravelCraftingTable\\LaravelCraftingTableServiceProvider"
             ]
         }
-    },
-    "scripts": {
-        "codestyle-check": "./vendor/bin/phpcs src/ tests/",
-        "codestyle-fix": "./vendor/bin/phpcbf src/ tests/"
     }
 }
