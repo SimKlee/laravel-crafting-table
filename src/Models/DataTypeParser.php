@@ -23,6 +23,10 @@ class DataTypeParser
         'int'           => 'integer',
         'biginteger'    => 'bigInteger',
         'bigint'        => 'bigInteger',
+        'varchar'       => 'string',
+        'string'        => 'string',
+        'char'          => 'char',
+        'timestamp'     => 'timestamp',
     ];
 
     private array $castMap = [
@@ -33,6 +37,11 @@ class DataTypeParser
             'integer',
             'bigInteger',
         ],
+        'string'  => [
+            'string',
+            'varchar',
+            'char',
+        ],
         'array'   => [
             'json',
         ],
@@ -42,6 +51,7 @@ class DataTypeParser
         'Carbon'  => [
             'date',
             'datetime',
+            'timestamp',
             'time',
             'year',
         ],

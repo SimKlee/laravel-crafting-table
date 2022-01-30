@@ -10,23 +10,22 @@ use SimKlee\LaravelCraftingTable\Exceptions\NoDataTypeKeywordFoundException;
 
 class ColumnParser
 {
-    private array  $keywords      = [];
-    public ?string $dataType;
-    public ?string $dataTypeCast;
-    public bool    $nullable      = false;
-    public bool    $autoIncrement = false;
-    public ?int    $length;
-    public ?int    $decimals;
-    public ?int    $precision;
+    public const FOREIGN_KEY    = 'foreignKey';
+    public const AUTO_INCREMENT = 'autoIncrement';
+
+    private array            $keywords = [];
+    private ColumnDefinition $columnDefinition;
 
     /**
      * @throws MultipleDataTypeKeywordsFoundException
      * @throws NoCastTypeForDataTypeException
      * @throws NoDataTypeKeywordFoundException
      */
-    public function __construct(string $definition)
+    public function __construct(string $name, string $definition)
     {
-        $this->keywords = explode('|', $definition);
+        $this->columnDefinition       = new ColumnDefinition();
+        $this->columnDefinition->name = $name;
+        $this->keywords               = $this->normalizeKeywords(explode('|', $definition));
         $this->parse();
     }
 
@@ -37,15 +36,29 @@ class ColumnParser
      */
     private function parse(): void
     {
-        $dataTypeParser      = new DataTypeParser($this->keywords);
+        $dataTypeParser                       = new DataTypeParser($this->keywords);
+        $this->columnDefinition->dataType     = $dataTypeParser->getDataType();
+        $this->columnDefinition->dataTypeCast = $dataTypeParser->getCastType();
 
-        $this->dataType      = $dataTypeParser->getDataType();
-        $this->dataTypeCast  = $dataTypeParser->getCastType();
-        $this->nullable      = $this->keywordExists('nullable');
-        $this->autoIncrement = $this->keywordExists(['autoincrement', 'autoIncrement', 'ai']);
-        $this->length        = $this->getIntegerValueFromKeyword('length');
-        $this->decimals      = $this->getIntegerValueFromKeyword('decimals');
-        $this->precision     = $this->getIntegerValueFromKeyword('precision');
+        $this->columnDefinition->unsigned      = $this->keywordExists('unsigned');
+        $this->columnDefinition->nullable      = $this->keywordExists('nullable');
+        $this->columnDefinition->autoIncrement = $this->keywordExists(['autoincrement', 'autoIncrement', 'ai']);
+        $this->columnDefinition->length        = $this->getIntegerValueFromKeyword('length');
+        $this->columnDefinition->decimals      = $this->getIntegerValueFromKeyword('decimals');
+        $this->columnDefinition->precision     = $this->getIntegerValueFromKeyword('precision');
+    }
+
+    private function normalizeKeywords(array $keywords): array
+    {
+        $normalizedKeywords = [];
+        foreach ($keywords as $keyword) {
+            $normalizedKeywords[] = match ($keyword) {
+                'ai', 'autoincrement' => 'autoIncrement',
+                default               => $keyword,
+            };
+        }
+
+        return $normalizedKeywords;
     }
 
     private function getValueFromKeyword(string $keyword): string|null
@@ -61,9 +74,9 @@ class ColumnParser
 
     private function keywordExists(string|array $keywords): bool
     {
-        collect($this->keywords)->filter(function (string $keyword) use ($keywords) {
-            return (is_array($keywords) && in_array($keyword, $keywords)) || $keyword === $keywords;
-        })->count() > 0;
+        return collect($this->keywords)->filter(function (string $keyword) use ($keywords) {
+                return (is_array($keywords) && in_array($keyword, $keywords)) || $keyword === $keywords;
+            })->count() > 0;
     }
 
     private function getIntegerValueFromKeyword(string $keyword): int|null
@@ -71,5 +84,10 @@ class ColumnParser
         $value = $this->getValueFromKeyword($keyword);
 
         return !is_null($value) ? (int)$value: null;
+    }
+
+    public function getColumnDefinition(): ColumnDefinition
+    {
+        return $this->columnDefinition;
     }
 }

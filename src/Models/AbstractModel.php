@@ -15,6 +15,8 @@ abstract class AbstractModel extends Model
 {
     public const TABLE = '';
 
+    public const DELETED_AT = 'deleted_at';
+
     /**
      * @param Builder $query
      *
@@ -46,6 +48,16 @@ abstract class AbstractModel extends Model
     public function getModelName(): string
     {
         return class_basename($this);
+    }
+
+    public static function createFake(array $attributes = []): AbstractModel
+    {
+        return static::factory()->create($attributes);
+    }
+
+    public static function makeFake(array $attributes = []): AbstractModel
+    {
+        return static::factory()->make($attributes);
     }
 
     public static function createFakes(int $count, array $attributes = []): Collection
