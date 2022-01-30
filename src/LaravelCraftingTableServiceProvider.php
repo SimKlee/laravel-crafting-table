@@ -20,6 +20,8 @@ class LaravelCraftingTableServiceProvider extends ServiceProvider
             ]);
 
         }
+
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'crafting-table');
     }
 
     public function register(): void
