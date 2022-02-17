@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace SimKlee\LaravelCraftingTable\Generators;
 
 use File;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use SimKlee\LaravelCraftingTable\Models\ModelDefinition;
+use SimKlee\LaravelCraftingTable\Models\Definitions\ModelDefinition;
+use SimKlee\LaravelCraftingTable\Support\StringBuffer;
+use Str;
 
 abstract class AbstractGenerator
 {
@@ -14,7 +17,7 @@ abstract class AbstractGenerator
     protected string          $template;
     protected bool            $class;
     protected string          $namespace;
-    protected string          $extends;
+    protected string          $extends = Model::class;
     protected Collection      $interfaces;
     protected Collection      $uses;
     protected Collection      $traits;
@@ -27,27 +30,37 @@ abstract class AbstractGenerator
         $this->traits          = new Collection();
     }
 
+    protected function beforeWrite(): void
+    {
+
+    }
+
     public function write(string $file, bool $override = false): bool
     {
-        $content = view('crafting-table::' . $this->template)
-            ->with('generator', $this)
-            ->with('modelDefinition', $this->modelDefinition)
-            ->render();
+        $this->beforeWrite();
 
-        if ($this->class) {
-            $content = '<?php' . PHP_EOL . PHP_EOL . $content;
+        $buffer = StringBuffer::create()
+                              ->appendIf($this->class, '<?php' . PHP_EOL . PHP_EOL)
+                              ->append(view('crafting-table::' . $this->template)
+                                  ->with('generator', $this)
+                                  ->with('modelDefinition', $this->modelDefinition)
+                                  ->render());
+
+        $this->createDirectoryForFileIfNotExists($file);
+
+        if (!File::exists($file) || $override) {
+            return File::put($file, $buffer->toString()) !== false;
         }
 
+        return false;
+    }
+
+    private function createDirectoryForFileIfNotExists(string $file): void
+    {
         $directory = $this->getDirectoryFromFile($file);
         if (!File::isDirectory($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
-
-        if (!File::exists($file) || $override) {
-            return File::put($file, $content) !== false;
-        }
-
-        return false;
     }
 
     private function getDirectoryFromFile(string $file): string
@@ -63,8 +76,12 @@ abstract class AbstractGenerator
         $this->uses->add($class);
     }
 
-    public function addUses(Collection $uses)
+    public function addUses(Collection|array $uses)
     {
+        if (is_array($uses)) {
+            $uses = collect($uses);
+        }
+
         $uses->each(function (string $class) {
             $this->addUse($class);
         });
@@ -93,6 +110,11 @@ abstract class AbstractGenerator
         } else {
             $this->extends = $class;
         }
+    }
+
+    public function getClassPath(): string
+    {
+        return Str::replace('\\', '/', Str::replace(['App', 'Tests'], ['app', 'tests'], $this->namespace));
     }
 
 }

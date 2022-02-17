@@ -8,21 +8,22 @@ use Illuminate\Support\Collection;
 use SimKlee\LaravelCraftingTable\Exceptions\MultipleDataTypeKeywordsFoundException;
 use SimKlee\LaravelCraftingTable\Exceptions\NoCastTypeForDataTypeException;
 use SimKlee\LaravelCraftingTable\Exceptions\NoDataTypeKeywordFoundException;
+use SimKlee\LaravelCraftingTable\Exceptions\UnknownForeignKeyColumnNameSyntaxException;
 
 class ModelDefinition
 {
-    private ModelDefinitionBag $bag;
-    private array              $definition;
-    public ?string             $model;
-    public ?string             $table;
-    public Collection          $columns;
-    public array               $values;
-    public array               $defaults;
-    public bool                $timestamps = false;
-    public bool                $softDelete = false;
-    public bool                $uuid       = false;
-    public Collection          $traits;
-    public Collection          $uses;
+    private array                $definition;
+    public ?string               $model;
+    public ?string               $table;
+    public Collection            $columns;
+    public array                 $values;
+    public array                 $defaults;
+    public bool                  $timestamps           = false;
+    public bool                  $softDelete           = false;
+    public bool                  $uuid                 = false;
+    public Collection            $traits;
+    public Collection            $uses;
+    public ?ForeignKeyDefinition $foreignKeyDefinition = null;
 
     /**
      * @throws MultipleDataTypeKeywordsFoundException
@@ -56,17 +57,13 @@ class ModelDefinition
 
 
         foreach ($this->fromDefinitionArrayIfExists('columns') as $column => $definition) {
-
-            if ($this->isForeignKeyDefinition($definition)) {
-                $definition = (new ForeignKeyParser($this->bag, $column, $definition))->getDefinition();
-            }
-
             $columnDefinition = (new ColumnParser($column, $definition))->getColumnDefinition();
             $this->columns->put($column, $columnDefinition);
             if ($columnDefinition->dataTypeCast === 'Carbon') {
                 $this->addUses(\Carbon\Carbon::class);
             }
         }
+
     }
 
     private function isForeignKeyDefinition(string $definition): bool
@@ -78,9 +75,14 @@ class ModelDefinition
         return false;
     }
 
-    private function mergeForeignKeyDefinitions(string $column, string $definition): string
+    /**
+     * @return Collection
+     */
+    public function getColumnsWithForeignKey(): Collection
     {
-        return $definition;
+        return $this->columns->filter(function (ColumnDefinition $columnDefinition) {
+            return $columnDefinition->foreignKey;
+        });
     }
 
     /**
@@ -157,6 +159,11 @@ class ModelDefinition
         if ($this->columns->has($name) === false) {
             $this->columns->put($name, (new ColumnParser($name, $definition))->getColumnDefinition());
         }
+    }
+
+    public function getColumn(string $name): ColumnDefinition
+    {
+        return $this->columns->get($name);
     }
 
     private function addTrait(string $class)

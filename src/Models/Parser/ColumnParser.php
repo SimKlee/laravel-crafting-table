@@ -7,6 +7,7 @@ namespace SimKlee\LaravelCraftingTable\Models;
 use SimKlee\LaravelCraftingTable\Exceptions\MultipleDataTypeKeywordsFoundException;
 use SimKlee\LaravelCraftingTable\Exceptions\NoCastTypeForDataTypeException;
 use SimKlee\LaravelCraftingTable\Exceptions\NoDataTypeKeywordFoundException;
+use Str;
 
 class ColumnParser
 {
@@ -36,9 +37,17 @@ class ColumnParser
      */
     private function parse(): void
     {
-        $dataTypeParser                       = new DataTypeParser($this->keywords);
-        $this->columnDefinition->dataType     = $dataTypeParser->getDataType();
-        $this->columnDefinition->dataTypeCast = $dataTypeParser->getCastType();
+        $this->parseForeignKey();
+
+        try {
+            $dataTypeParser                       = new DataTypeParser($this->keywords);
+            $this->columnDefinition->dataType     = $dataTypeParser->getDataType();
+            $this->columnDefinition->dataTypeCast = $dataTypeParser->getCastType();
+        } catch (NoDataTypeKeywordFoundException $e) {
+            if ($this->columnDefinition->foreignKey === false) {
+                throw $e;
+            }
+        }
 
         $this->columnDefinition->unsigned      = $this->keywordExists('unsigned');
         $this->columnDefinition->nullable      = $this->keywordExists('nullable');
@@ -46,6 +55,25 @@ class ColumnParser
         $this->columnDefinition->length        = $this->getIntegerValueFromKeyword('length');
         $this->columnDefinition->decimals      = $this->getIntegerValueFromKeyword('decimals');
         $this->columnDefinition->precision     = $this->getIntegerValueFromKeyword('precision');
+    }
+
+    private function parseForeignKey()
+    {
+        $this->columnDefinition->foreignKey = $this->keywordExists(['foreignKey', 'fk']);
+
+        $parts = explode('_', $this->columnDefinition->name);
+        $id    = array_pop($parts);
+        $model = Str::ucfirst(Str::camel(implode('_', $parts)));
+
+        $this->columnDefinition->foreignKeyModel  = $model;
+        $this->columnDefinition->foreignKeyColumn = $id;
+    }
+
+    private function getForeignKeyColumnDefinition(string $column): ColumnDefinition
+    {
+
+
+        return $this->get(model: $model)->getColumn(name: $id);
     }
 
     private function normalizeKeywords(array $keywords): array
