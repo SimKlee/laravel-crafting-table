@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SimKlee\LaravelCraftingTable\Models;
+namespace SimKlee\LaravelCraftingTable\Models\Parser;
 
 use SimKlee\LaravelCraftingTable\Exceptions\MultipleDataTypeKeywordsFoundException;
 use SimKlee\LaravelCraftingTable\Exceptions\NoCastTypeForDataTypeException;
@@ -21,6 +21,7 @@ class DataTypeParser
         'mediumint'     => 'mediumInteger',
         'integer'       => 'integer',
         'int'           => 'integer',
+        'decimal'       => 'decimal',
         'biginteger'    => 'bigInteger',
         'bigint'        => 'bigInteger',
         'varchar'       => 'string',
@@ -48,6 +49,9 @@ class DataTypeParser
         'boolean' => [
             'boolean',
         ],
+        'float' => [
+            'decimal',
+        ],
         'Carbon'  => [
             'date',
             'datetime',
@@ -62,22 +66,23 @@ class DataTypeParser
      */
     public function __construct(array $keywords)
     {
-        $keyword = collect($keywords)->filter(function (string $keyword) {
-            return in_array(strtolower($keyword), $this->typeMap);
+        $types = array_keys($this->typeMap);
+        $found = collect($keywords)->filter(function (string $keyword) use ($types) {
+            return isset($this->typeMap[ strtolower($keyword) ]);
         });
 
-        if ($keyword->count() === 1) {
-            $this->handleKeyword($keyword->first());
-        } elseif ($keyword->count() > 1) {
-            throw new MultipleDataTypeKeywordsFoundException($keyword->implode(', '));
-        } elseif ($keyword->count() === 0) {
+        if ($found->count() === 1) {
+            $this->handleKeyword($found->first());
+        } elseif ($found->count() > 1) {
+            throw new MultipleDataTypeKeywordsFoundException($found->implode(', '));
+        } elseif ($found->count() === 0) {
             throw new NoDataTypeKeywordFoundException(implode(', ', $keywords));
         }
     }
 
     private function handleKeyword(string $keyword): void
     {
-        $this->dataType = $this->typeMap[ $keyword ];
+        $this->dataType = $this->typeMap[ strtolower($keyword) ];
     }
 
     public function getDataType(): string

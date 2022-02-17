@@ -6,7 +6,7 @@ namespace SimKlee\LaravelCraftingTable\Models\Queries;
 
 use Illuminate\Database\Eloquent\Builder;
 
-abstract class AbstractModelQuery extends Builder
+abstract class AbstractModelQuery extends Builder implements ModelQueryInterface
 {
     protected const JOIN_TYPE_INNER = 'inner';
     protected const JOIN_TYPE_LEFT  = 'left';
@@ -14,14 +14,14 @@ abstract class AbstractModelQuery extends Builder
     /**
      * @throws UnknownJoinTypeException
      */
-    protected function createJoin(
+    public function createJoin(
         string $type,
         string $table,
         string $condition1,
         string $condition2,
         string $with = null,
         string $groupBy = null
-    ): AbstractModelQuery
+    ): ModelQueryInterface
     {
         $method = match ($type) {
             self::JOIN_TYPE_INNER => 'join',

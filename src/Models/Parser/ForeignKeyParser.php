@@ -2,73 +2,87 @@
 
 declare(strict_types=1);
 
-namespace SimKlee\LaravelCraftingTable\Models;
+namespace SimKlee\LaravelCraftingTable\Models\Parser;
 
-use SimKlee\LaravelCraftingTable\Exceptions\UnknownForeignKeyColumnNameSyntaxException;
+use SimKlee\LaravelCraftingTable\Exceptions\MissingForeignKeyTypeDefinition;
+use SimKlee\LaravelCraftingTable\Exceptions\UnknownForeignKeyTypeDefinition;
+use SimKlee\LaravelCraftingTable\Models\Definitions\ColumnDefinition;
+use Str;
 
 class ForeignKeyParser
 {
-    private ModelDefinitionBag $bag;
-    private string             $model;
-    private string             $column;
-    private string             $definition;
+    private ColumnDefinition $columnDefinition;
+    private array            $definition;
 
-    private ?string $referencedModel  = null;
-    private ?string $referencedColumn = 'id';
+    private array $availableTypes = [
+        ColumnDefinition::FOREIGN_KEY_TYPE_ONE_TO_ONE,
+        ColumnDefinition::FOREIGN_KEY_TYPE_ONE_TO_MANY,
+        ColumnDefinition::FOREIGN_KEY_TYPE_MANY_TO_MANY,
+    ];
 
-    /**
-     * @throws UnknownForeignKeyColumnNameSyntaxException
-     */
-    public function __construct(ModelDefinitionBag $bag, string $model, string $column, string $definition)
+    public function __construct(ColumnDefinition $columnDefinition, string $definition)
     {
-        $this->bag        = $bag;
-        $this->model      = $model;
-        $this->column     = $column;
-        $this->definition = $this->getDefinitionWithoutForeignKeyKeyword($definition);
-
-        $this->mergeDefinitions();
-    }
-
-    private function getDefinitionWithoutForeignKeyKeyword(string $definition): string
-    {
-        $definitions     = [];
-        $definitionParts = explode('|', $definition);
-        foreach ($definitionParts as $definitionPart) {
-            if (in_array($definitionPart, ['fk', 'FK', 'foreignKey'])) {
-                continue;
-            }
-
-            $definitions[] = $definitionPart;
-        }
-
-        return implode('|', $definitions);
+        $this->columnDefinition = $columnDefinition;
+        $this->definition       = explode('|', $definition);
     }
 
     /**
-     * @throws UnknownForeignKeyColumnNameSyntaxException
+     * @throws MissingForeignKeyTypeDefinition
+     * @throws UnknownForeignKeyTypeDefinition
      */
-    private function mergeDefinitions(): void
+    public function parse(): ColumnDefinition
     {
-        $columnParts = explode('_', $this->column);
-        if (last($columnParts) !== 'id') {
-            throw new UnknownForeignKeyColumnNameSyntaxException(sprintf('Model %s: %s', $this->model, $this->column));
+        $this->columnDefinition->foreignKey = $this->isForeignKey();
+
+        if ($this->columnDefinition->foreignKey) {
+            $parts = explode('_', $this->columnDefinition->name);
+            $id    = array_pop($parts);
+            $model = Str::ucfirst(Str::camel(implode('_', $parts)));
+
+            $this->columnDefinition->foreignKeyType   = $this->getForeignKeyType();
+            $this->columnDefinition->foreignKeyModel  = $model;
+            $this->columnDefinition->foreignKeyColumn = $id;
         }
 
-        $this->referencedColumn = array_pop($columnParts);
-        $modelName              = implode('', array_map(function (string $part) {
-            return ucfirst($part);
-        }, $columnParts));
-
-        $this->referencedModel = ($modelName === 'Parent') ? $this->model: $modelName;
-
-        /** @var ColumnDefinition $columnDefinition */
-        $columnDefinition = $this->bag->get($this->referencedModel)->columns->get($this->referencedColumn);
-
-        // @TODO: merge definitions
+        return $this->columnDefinition;
     }
 
-    public function getDefinition(): string
+    private function isForeignKey(): bool
     {
-        return $this->definition;
+        $fkKeywords = ['foreignKey', 'fk'];
+
+        return collect($this->definition)
+                ->filter(function (string $definition) use ($fkKeywords) {
+                    return in_array($definition, $fkKeywords);
+                })->count() > 0;
+    }
+
+    /**
+     * @throws MissingForeignKeyTypeDefinition
+     * @throws UnknownForeignKeyTypeDefinition
+     */
+    private function getForeignKeyType(): string
+    {
+        $typeDefinition = collect($this->definition)->filter(function (string $definition) {
+            return Str::startsWith(haystack: $definition, needles: 'type:');
+        });
+
+        if ($typeDefinition->count() !== 1) {
+            throw new MissingForeignKeyTypeDefinition(sprintf(
+                'Missing definition of foreign key type in "%s"', implode(separator: '|', array: $this->definition)
+            ));
+        }
+
+        [, $type] = explode(separator: ':', string: $typeDefinition->first());
+
+        if (!in_array(needle: $type, haystack: $this->availableTypes)) {
+            throw new UnknownForeignKeyTypeDefinition(sprintf(
+                'No known foreign key type found in "%s" [known types: %s]',
+                $typeDefinition->first(),
+                implode(separator: '|', array: $this->availableTypes)
+            ));
+        }
+
+        return $type;
     }
 }

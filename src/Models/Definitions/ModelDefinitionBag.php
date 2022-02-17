@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SimKlee\LaravelCraftingTable\Models;
+namespace SimKlee\LaravelCraftingTable\Models\Definitions;
 
 use Illuminate\Support\Collection;
 use SimKlee\LaravelCraftingTable\Exceptions\MultipleDataTypeKeywordsFoundException;

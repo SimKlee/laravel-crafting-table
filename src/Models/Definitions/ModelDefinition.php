@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SimKlee\LaravelCraftingTable\Models;
+namespace SimKlee\LaravelCraftingTable\Models\Definitions;
 
 use Illuminate\Support\Collection;
 use SimKlee\LaravelCraftingTable\Exceptions\MultipleDataTypeKeywordsFoundException;
 use SimKlee\LaravelCraftingTable\Exceptions\NoCastTypeForDataTypeException;
 use SimKlee\LaravelCraftingTable\Exceptions\NoDataTypeKeywordFoundException;
-use SimKlee\LaravelCraftingTable\Exceptions\UnknownForeignKeyColumnNameSyntaxException;
+use SimKlee\LaravelCraftingTable\Models\AbstractModel;
+use SimKlee\LaravelCraftingTable\Models\Parser\ColumnParser;
 
 class ModelDefinition
 {

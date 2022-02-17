@@ -9,9 +9,10 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 use SimKlee\LaravelCraftingTable\Models\Queries\AbstractModelQuery;
-use SimKlee\LaravelCraftingTable\Models\Repositories\AbstractModelRepository;
+use SimKlee\LaravelCraftingTable\Models\Queries\ModelQueryInterface;
+use SimKlee\LaravelCraftingTable\Models\Repositories\ModelRepositoryInterface;
 
-abstract class AbstractModel extends Model
+abstract class AbstractModel extends Model implements ModelInterface
 {
     public const TABLE = '';
 
@@ -22,14 +23,14 @@ abstract class AbstractModel extends Model
      *
      * @return AbstractModelQuery
      */
-    public function newEloquentBuilder($query): AbstractModelQuery
+    public function newEloquentBuilder($query): ModelQueryInterface
     {
         $class = sprintf('\App\Models\Queries\%sQuery', class_basename(static::class));
 
         return new $class($query);
     }
 
-    public static function repository(): AbstractModelRepository
+    public static function repository(): ModelRepositoryInterface
     {
         $class = sprintf('\App\Models\Repositories\%sRepository', class_basename(static::class));
 
@@ -50,12 +51,12 @@ abstract class AbstractModel extends Model
         return class_basename($this);
     }
 
-    public static function createFake(array $attributes = []): AbstractModel
+    public static function createFake(array $attributes = []): ModelInterface
     {
         return static::factory()->create($attributes);
     }
 
-    public static function makeFake(array $attributes = []): AbstractModel
+    public static function makeFake(array $attributes = []): ModelInterface
     {
         return static::factory()->make($attributes);
     }
